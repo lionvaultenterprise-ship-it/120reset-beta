@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07111e">
+<meta name="description" content="120reset breaks doom-scrolling, task paralysis, and executive freeze in 120 seconds.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>120reset — Break the loop in 120 seconds</title>
+<style>
+:root {
+  color-scheme: dark;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ink: #f8fafc;
+  --text-body: #cbd5e1;
+  --muted: #94a3b8;
+  --dim: #64748b;
+  --night: #07111e;
+  --line: rgba(221, 233, 242, 0.14);
+  --line-strong: rgba(221, 233, 242, 0.28);
+  --active: #f3c547;
+}
+
+* { 
+  box-sizing: border-box; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+html { min-width: 320px; background: var(--night); scroll-behavior: smooth; }
+body { 
+  margin: 0; 
+  min-width: 320px; 
+  background: var(--night); 
+  color: var(--ink); 
+  overflow-x: hidden; 
+  font-size: 16px; 
+  line-height: 1.6;
+}
+button, a { font: inherit; }
+a { color: inherit; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outline-offset: 4px; }
+
+.app-shell {
+  min-height: 100svh;
+  isolation: isolate;
+  overflow: hidden;
+  background: radial-gradient(circle at 60% 18%, #15344f 0, var(--night) 46%, #030810 100%);
+  display: flex;
+  flex-direction: column;
+}
+.app-shell:before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.12;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse at center, #000, transparent 75%);
+}
+
+.app-nav, .sales-page {
+  width: min(1120px, calc(100% - 48px));
+  margin-inline: auto;
+}
+.sales-page { flex: 1; }
+
+.app-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 0;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(243, 197, 71, 0.7);
+  border-radius: 50%;
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: rgba(243, 197, 71, 0.06);
+}
+.nav-tag {
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 80px clamp(24px, 5vw, 60px) 90px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+  margin-bottom: 20px;
+  overflow: hidden;
+  min-height: 500px;
+}
+.hero-visual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.hero-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(7, 17, 30, 0.85) 0%, rgba(7, 17, 30, 0.5) 45%, rgba(7, 17, 30, 0.05) 100%);
+}
+.hero-video-clip {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+.hero-copy { 
+  max-width: 580px; 
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.eyebrow:before {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+}
+.hero-copy h1 {
+  max-width: 15ch;
+  margin: 18px 0 20px;
+  font-size: clamp(2.8rem, 5.5vw, 4.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+.hero h1 em, .reset-heading h2 em, .science-heading h2 em, .intercept-copy h2 em, .final-copy h2 em, .brain-showcase-heading h2 em {
+  color: var(--active);
+  font-style: normal;
+}
+.hero-lede {
+  max-width: 500px;
+  margin: 0 0 30px;
+  color: var(--text-body);
+  font-size: 1.15rem;
+  line-height: 1.65;
+}
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  transition: transform 0.18s, box-shadow 0.18s;
+  cursor: pointer;
+}
+.button span { font-size: 1.15rem; line-height: 1; }
+.button-primary {
+  color: #07111e;
+  background: var(--active);
+  box-shadow: 0 10px 26px rgba(243, 197, 71, 0.28);
+  border: none;
+}
+.button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(243, 197, 71, 0.38);
+}
+.button-secondary {
+  color: var(--ink);
+  background: rgba(13, 27, 44, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line-strong);
+}
+.button-secondary:hover {
+  transform: translateY(-2px);
+  background: rgba(22, 44, 72, 0.9);
+}
+.micro-proof {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.narrative-bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 0 24px;
+  position: relative;
+}
+.narrative-bridge::before {
+  content: '';
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(180deg, var(--line-strong) 0%, var(--active) 50%, var(--line-strong) 100%);
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+.bridge-tag {
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.bridge-text {
+  max-width: 580px;
+  margin: 0 auto;
+  color: var(--text-body);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  font-weight: 500;
+}
+.bridge-text strong { color: var(--ink); }
+
+.brain-showcase-card {
+  padding: 42px clamp(20px, 4vw, 52px) 46px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(9, 24, 39, 0.75);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+  text-align: center;
+}
+.brain-showcase-heading { margin-bottom: 26px; }
+.brain-showcase-heading h2 {
+  margin: 12px 0 0;
+  font-size: clamp(2.1rem, 3.8vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+.showcase-brain-viewport {
+  width: 100%;
+  height: 380px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, #162f4e 0%, #0d1b2c 60%, #08111f 100%);
+  border-radius: 20px;
+  border: 1px solid var(--line-strong);
+  box-shadow: inset 0 0 60px rgba(86, 205, 255, 0.12), 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.brain-status-indicator {
+  position: absolute;
+  top: 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(8, 17, 31, 0.92);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  pointer-events: none;
+  z-index: 25 !important;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+.reset-card {
+  padding: 42px clamp(20px, 4vw, 52px) 46px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(9, 24, 39, 0.75);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+}
+.reset-heading { margin-bottom: 26px; }
+.reset-heading h2 {
+  margin: 12px 0 0;
+  font-size: clamp(2.1rem, 3.8vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+.demo-launch { text-align: center; padding: 16px 0 20px; }
+.demo-launch p {
+  margin: 0 auto;
+  max-width: 500px;
+  color: var(--text-body);
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+.spin-outer-ring {
+  width: 172px;
+  height: 172px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  border: 2px dashed rgba(243, 197, 71, 0.45);
+  box-shadow: 0 0 35px rgba(243, 197, 71, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ringRotate 20s linear infinite;
+}
+.big-red-btn {
+  width: 142px;
+  height: 142px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f3c547 0%, #d89f22 80%);
+  border: 2px solid #ffe18b;
+  color: #08111f;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgba(243, 197, 71, 0.55);
+  transition: transform 0.1s ease;
+}
+.big-red-btn:active { transform: scale(0.96); }
+@keyframes ringRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.task-deck { padding: 24px 0 10px; border-top: 1px solid var(--line); }
+.task-deck-heading {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.choice-list { display: grid; gap: 11px; }
+.choice {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px 18px 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(13, 27, 44, 0.6);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.choice:hover {
+  transform: translateX(-3px);
+  border-color: rgba(var(--choice-rgb), 0.8);
+  background: rgba(20, 42, 68, 0.8);
+}
+.choice-index {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(var(--choice-rgb), 0.55);
+  border-radius: 50%;
+  color: var(--choice);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.choice-name { font-size: 1rem; font-weight: 600; color: var(--ink); }
+.choice-arrow { color: var(--choice); font-size: 1.2rem; font-weight: 800; }
+
+.task-card {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 24px 22px 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: 20px;
+  background: rgba(11, 23, 38, 0.95);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+.task-card.is-active {
+  border-color: rgba(243, 197, 71, 0.5);
+  background: radial-gradient(circle at 50% 0%, rgba(243, 197, 71, 0.08) 0%, rgba(11, 23, 38, 0.95) 70%);
+}
+.task-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+.task-meta-tag { display: inline-flex; align-items: center; gap: 10px; }
+.task-index {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(243, 197, 71, 0.55);
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1;
+}
+.task-title-badge {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.task-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(243, 197, 71, 0.1);
+  border: 1px solid rgba(243, 197, 71, 0.3);
+}
+.timer-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--active);
+  box-shadow: 0 0 8px var(--active);
+  animation: pulseDot 1s ease-in-out infinite alternate;
+}
+@keyframes pulseDot { from { opacity: 0.35; } to { opacity: 1; } }
+.task-time {
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.task-body { text-align: left; }
+.task-cue {
+  display: inline-block;
+  margin: 0 0 8px;
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.task-action-box {
+  margin: 0;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: rgba(13, 27, 44, 0.85);
+  border: 1px solid var(--line);
+  border-left: 3.5px solid var(--active);
+  color: #ffffff;
+  font-size: clamp(1.15rem, 2.2vw, 1.3rem);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.task-step-list { display: flex; flex-direction: column; gap: 8px; }
+.task-step-item { display: flex; align-items: baseline; gap: 8px; }
+.task-step-num {
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.task-card-cta-row {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.science-section {
+  padding: 42px clamp(20px, 4vw, 52px) 46px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(9, 24, 39, 0.75);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+}
+.science-heading h2 {
+  margin: 14px 0 10px;
+  font-size: clamp(2.1rem, 3.8vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+.science-lede {
+  margin: 0 0 32px;
+  color: var(--text-body);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+.science-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.science-step {
+  padding: 26px 22px 28px;
+  border-top: 2.5px solid var(--active);
+  border-radius: 0 0 14px 14px;
+  background: rgba(13, 27, 44, 0.45);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.science-step:hover {
+  transform: translateY(-2px);
+  background: rgba(18, 36, 58, 0.6);
+}
+.science-step-time {
+  display: inline-block;
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.science-step h3 {
+  margin: 12px 0 4px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.science-step-sub {
+  display: block;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--active);
+  margin-bottom: 12px;
+}
+.science-step p {
+  margin: 0;
+  color: var(--text-body);
+  font-size: 0.98rem;
+  line-height: 1.65;
+  font-weight: 500;
+}
+
+.intercept-section {
+  display: grid;
+  grid-template-columns: 1fr 0.9fr;
+  gap: 6vw;
+  align-items: center;
+  padding: 42px clamp(20px, 4vw, 52px) 46px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(9, 24, 39, 0.75);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+}
+.intercept-copy h2 {
+  margin: 14px 0 18px;
+  font-size: clamp(2.2rem, 3.8vw, 3.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+.intercept-copy p {
+  max-width: 460px;
+  margin: 0;
+  color: var(--text-body);
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+.intercept-card {
+  padding: 32px 28px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(9, 24, 39, 0.85);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.intercept-pill {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 1px solid rgba(243, 197, 71, 0.35);
+  border-radius: 9999px;
+  color: var(--active);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.intercept-card h3 {
+  margin: 14px 0 16px;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+.intercept-card label {
+  display: block;
+  margin-top: 16px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.intercept-card input, .intercept-card select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 13px 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: #0b1929;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: 500;
+}
+.intercept-card .button {
+  width: 100%;
+  margin-top: 22px;
+  border: 0;
+  cursor: pointer;
+}
+.intercept-card small {
+  display: block;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+.intercept-card.is-armed { border-color: var(--active); }
+
+.final-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 70px 0 75px;
+  border-top: 1px solid var(--line);
+}
+.final-copy { 
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.final-copy .hero-actions {
+  justify-content: center;
+}
+.final-copy h2 {
+  margin: 18px 0 26px;
+  font-size: clamp(2.4rem, 4.6vw, 3.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+footer.custom-global-footer {
+  width: 100%;
+  padding: 40px 0;
+  background-color: #000000;
+  border-top: 1px solid #18181b;
+  text-align: center;
+}
+footer.custom-global-footer .footer-container {
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  footer.custom-global-footer .footer-container {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+footer.custom-global-footer p {
+  font-size: 0.75rem;
+  color: #71717a;
+  font-weight: 400;
+  margin: 0;
+}
+footer.custom-global-footer .footer-links {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.75rem;
+  color: #71717a;
+  font-weight: 400;
+}
+footer.custom-global-footer .footer-links a {
+  color: #71717a;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+footer.custom-global-footer .footer-links a:hover {
+  color: #a1a1aa;
+}
+
+@media(max-width: 800px) {
+  body { font-size: 15.5px; }
+  .app-nav, .sales-page { width: min(100% - 32px, 1120px); }
+  
+.hero { 
+    position: relative;
+    padding: 32px 18px 40px; 
+    border-radius: 20px;
+    margin-bottom: 28px;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+  .hero-visual {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+  .hero-video-clip {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+  .hero-visual::after {
+    display: block;
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(7, 17, 30, 0.2) 0%, rgba(7, 17, 30, 0.75) 50%, rgba(7, 17, 30, 0.98) 100%);
+  }
+  .hero-copy {
+    position: relative;
+    z-index: 2;
+    margin-top: 120px;
+    max-width: 100%;
+  }
+  .hero-copy h1 { font-size: clamp(2.6rem, 11vw, 3.8rem); }
+  
+  .brain-showcase-card { padding: 28px 18px 34px; }
+  .showcase-brain-viewport { height: 260px; }
+  .reset-card { padding: 28px 18px 34px; }
+  
+  .task-card { padding: 20px 16px 20px; }
+  .task-action-box { font-size: 1.1rem; padding: 14px 16px; }
+  .science-grid { grid-template-columns: 1fr; gap: 16px; }
+  .intercept-section { grid-template-columns: 1fr; gap: 32px; padding: 30px 0 55px; }
+  .final-strip { 
+    padding: 50px 0 55px; 
+    align-items: center; 
+    text-align: center; 
+  }
+  .final-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .final-copy .hero-actions {
+    justify-content: center;
+  }
+  .final-copy h2 { font-size: clamp(2.2rem, 10vw, 3.2rem); margin: 16px 0 22px; }
+  .narrative-bridge { padding: 32px 20px 24px; }
+  .narrative-bridge::before { height: 40px; margin-bottom: 12px; }
+}
+@media(prefers-reduced-motion: reduce) {
+  *, *:before, *:after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="/neuron-fibers.js"></script>
+<script>
+const tasksData = {
+  scrolling: {
+    index: '01',
+    title: 'Mindless scrolling',
+    appKey: 'mindless_scrolling',
+    cue: 'SAY ALOUD:',
+    actionHtml: '“The loop is cut. I am back in the room.”'
+  },
+  paralysis: {
+    index: '02',
+    title: 'Task paralysis',
+    appKey: 'task_paralysis',
+    cue: 'FOLLOW SEQUENCE:',
+    actionHtml: '<div class="task-step-list"><div class="task-step-item"><span class="task-step-num">1.</span> <span>Exhale fully &amp; hold</span></div><div class="task-step-item"><span class="task-step-num">2.</span> <span>Pull back your work</span></div><div class="task-step-item"><span class="task-step-num">3.</span> <span>Inhale</span></div></div>'
+  },
+  lethargy: {
+    index: '03',
+    title: 'Brain fog & lethargy',
+    appKey: 'low_lethargy',
+    cue: 'SAY FIRMLY:',
+    actionHtml: '“Drop the tension. Signal clear.”'
+  }
+};
+
+let currentTestedFriction = 'scrolling';
+
+const app = document.querySelector('#app');
+app.innerHTML = `
+  <div class="app-shell">
+    <header class="app-nav">
+      <a class="brand" href="/" aria-label="120reset home"><span class="brand-mark">120</span><span>120reset</span></a>
+      <span class="nav-tag">somatic circuit breaker</span>
+    </header>
+    <main class="sales-page">
+    <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <span class="eyebrow">WHEN YOUR BRAIN WON'T START</span>
+          <h1 id="page-title">1 <em>Tap</em><br>2 <em>Minutes</em><br>0 <em>Download</em></h1>
+          <p class="hero-lede">The only visual web app that stops time wastage from mindless scrolling, task paralysis, and brain clog.<br><em style="color: var(--active); font-style: italic; font-weight: 700;">For driven minds.</em></p>
+          <div class="hero-actions">
+            <a class="button button-primary app-cta-link" href="app.html">Get free instant access <span>→</span></a>
+            <a class="button button-secondary" href="#reset-demo">Try 10-Second Test ↓</a>
+          </div>
+          <p class="micro-proof">No account · no setup · works directly in your browser</p>
+        </div>
+        <div class="hero-visual">
+          <video class="hero-video-clip" autoplay loop muted playsinline poster="/images/hero.png">
+            <source src="/hero-bg.mp4" type="video/mp4">
+            <source src="hero-bg.mp4" type="video/mp4">
+          </video>
+        </div>
+      </section>
+
+      <div class="narrative-bridge">
+        <span class="bridge-tag">Phase 1/3 · Immediate Sensation</span>
+        <p class="bridge-text">You don't need another productivity lecture.<br><strong>Complete simple micro tasks of your targeted choice. Feel the winning sensation.</strong></p>
+      </div>
+
+      <!-- FIRST VISUAL BRAIN SHOWCASE SECTION -->
+      <section class="brain-showcase-card" aria-label="Optimal Brain State">
+        <div class="brain-showcase-heading">
+          <span class="eyebrow">See the problem. Solve it in 120 seconds.</span>
+          <h2>An Interactive visual to see<br><em>Your Current State of Mind</em></h2>
+        </div>
+        
+        <!-- Rogue closing div removed here so the outline wraps the whole card -->
+        <div class="showcase-brain-viewport" id="showcase-brain-viewport" style="background: #000000; padding: 0;">
+          <!-- LIVE SANDBOXED MILD FOGGY BRAIN -->
+          <iframe style="width: 100%; height: 100%; border: none; pointer-events: none; background: #000000; display: block;" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;style&gt;body{margin:0;background:transparent;overflow:hidden;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div id='v1' style='width:100vw;height:100vh;position:relative;'&gt;&lt;/div&gt;&lt;script src='/neuron-fibers.js'&gt;&lt;/script&gt;&lt;script&gt;document.addEventListener('DOMContentLoaded',()=&gt;{if(window.NeuraBrain){window.NeuraBrain.mount(document.getElementById('v1'));window.NeuraBrain.setFrictions(['mindless_scrolling'], 67);}});&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+          <div class="brain-status-indicator" style="background: #000000; border-color: var(--active); color: var(--active);">MILD FOGGY</div>
+        </div>
+      </section>
+
+      <section class="reset-card" id="reset-demo" aria-labelledby="demo-title">
+        <div class="reset-heading">
+          <div>
+            <span class="eyebrow">interactive simulator</span>
+            <h2 id="demo-title">Run a 10-Second<br><em>Test Reset</em></h2>
+          </div>
+        </div>
+        
+        <div class="demo-launch" id="stepStart">
+          <div class="spin-outer-ring"><button class="big-red-btn" id="bigResetButton" type="button" onclick="startTestFlow()">START</button></div>
+          <p id="resetStatus" aria-live="polite">Press START to simulate an immediate somatic interrupt on this screen.</p>
+        </div>
+
+        <div class="task-deck" id="stepChoose" hidden>
+          <div class="task-deck-heading"><span>choose what you are fighting right now</span></div>
+          <div class="choice-list" role="group">
+            <button class="choice" type="button" data-friction="scrolling" style="--choice:#f3c547;--choice-rgb:243,197,71;">
+              <span class="choice-index">01</span><span class="choice-copy"><span class="choice-name">01 / Mindless scrolling</span></span><span class="choice-arrow">→</span>
+            </button>
+            <button class="choice" type="button" data-friction="paralysis" style="--choice:#ff5d5d;--choice-rgb:255,93,93;">
+              <span class="choice-index">02</span><span class="choice-copy"><span class="choice-name">02 / Task paralysis</span></span><span class="choice-arrow">→</span>
+            </button>
+            <button class="choice" type="button" data-friction="lethargy" style="--choice:#f28b4b;--choice-rgb:242,139,75;">
+              <span class="choice-index">03</span><span class="choice-copy"><span class="choice-name">03 / Brain fog &amp; lethargy</span></span><span class="choice-arrow">→</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="task-deck" id="stepTask" hidden>
+          <div class="task-card is-active">
+            <div class="task-card-top">
+              <div class="task-meta-tag">
+                <span class="task-index" id="activeTaskIndex">01</span>
+                <span class="task-title-badge" id="activeTaskTitle">Mindless scrolling</span>
+              </div>
+              <div class="task-timer-badge">
+                <span class="timer-dot"></span>
+                <span class="task-time" id="activeTaskTimer" aria-live="polite">00:10</span>
+              </div>
+            </div>
+            <div class="task-body">
+              <span class="task-cue" id="activeTaskCue">SAY ALOUD:</span>
+              <div class="task-action-box" id="activeTaskAction">“The loop is cut. I am back in the room.”</div>
+            </div>
+
+            <div class="task-card-cta-row">
+              <a class="button button-primary app-cta-link" id="cardLaunchCta" href="app.html" style="width: 100%;">
+                Launch Full 120s Reset <span>→</span>
+              </a>
+              <p class="micro-proof" style="margin: 0; font-size: 0.8rem;">Direct launch into protocol · no account required</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="narrative-bridge">
+        <span class="bridge-tag">Phase 2/3 · Why It Works</span>
+        <p class="bridge-text">Tested across <strong>250+ private beta sessions</strong> with engineers, writers, and students: <span>willpower cannot override a threat response. Only physiology can.</span></p>
+
+      <section class="science-section" aria-labelledby="science-title">
+        <div class="science-heading">
+          <span class="eyebrow">The Physiology</span>
+          <h2 id="science-title">The reset follows<br><em>the nervous system</em></h2>
+          <p class="science-lede">How the full 120-second clinical protocol unfreezes your motor cortex:</p>
+        </div>
+        <div class="science-grid">
+          <article class="science-step">
+            <span class="science-step-time">STEP 01 · FIRST 30s</span>
+            <h3>Autonomic Reset</h3>
+            <span class="science-step-sub">Calm the heart rate</span>
+            <p>A guided physiological sigh activates the vagus nerve, lower heart rate, and disarms the freeze reflex keeping you on your phone.</p>
+          </article>
+          <article class="science-step">
+            <span class="science-step-time">STEP 02 · NEXT 30s</span>
+            <h3>Motor Activation</h3>
+            <span class="science-step-sub">Break physical freeze</span>
+            <p>Vocalizing a command gives your motor cortex an external auditory anchor, bypassing internal resistance and getting hands moving.</p>
+          </article>
+          <article class="science-step">
+            <span class="science-step-time">STEP 03 · FINAL 60s</span>
+            <h3>Micro-Initiation</h3>
+            <span class="science-step-sub">Take the first real move</span>
+            <p>One sub-threshold physical action—typing a single letter or opening one tab—bypasses threat perception and builds real momentum.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- SECOND INTERACTIVE UNCLOGGING BRAIN SECTION -->
+      <section class="brain-showcase-card" aria-label="Interactive Brain Unclogging">
+        <div class="brain-showcase-heading">
+          <span class="eyebrow">Interactive Demo</span>
+          <h2>See and feel your Brain Unclogging<br><em>Live</em></h2>
+        </div>
+        <div class="showcase-brain-viewport" style="cursor: pointer; padding: 0; background: transparent;" onclick="triggerBrainUnclog()">
+          
+          <!-- LIVE SANDBOXED INTENSE FOGGY TO CLEAR BRAIN -->
+          <iframe id="interactive-brain-frame" style="width: 100%; height: 100%; border: none; pointer-events: none; background: radial-gradient(circle at 50% 50%, #162f4e 0%, #0d1b2c 60%, #08111f 100%); display: block;" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;style&gt;body{margin:0;background:transparent;overflow:hidden;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div id='v2' style='width:100vw;height:100vh;position:relative;'&gt;&lt;/div&gt;&lt;script src='/neuron-fibers.js'&gt;&lt;/script&gt;&lt;script&gt;document.addEventListener('DOMContentLoaded',()=&gt;{if(window.NeuraBrain){window.NeuraBrain.mount(document.getElementById('v2'));window.NeuraBrain.setFrictions(['mindless_scrolling','task_paralysis','low_lethargy'], 1);window.addEventListener('message',e=&gt;{if(e.data==='clear'){window.NeuraBrain.setFrictions([], 100);}});}});&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+          
+          <div id="unclog-overlay-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8, 17, 31, 0.4); transition: opacity 0.4s ease;">
+            <div style="background: var(--active); color: #08111f; font-weight: 800; font-size: 1.05rem; padding: 14px 28px; border-radius: 9999px; box-shadow: 0 10px 25px rgba(243, 197, 71, 0.35);">Tap to see the change</div>
+          </div>
+          
+          <div id="unclog-status-indicator" class="brain-status-indicator" style="background: rgba(255, 93, 93, 0.15); border-color: var(--accent-coral); color: #FFF; transition: all 0.5s ease;">INTENSE FOGGY</div>
+        </div>
+      </section>
+
+      <div class="narrative-bridge">
+        <span class="bridge-tag">Phase 3/3 · Prevention</span>
+        <p class="bridge-text"><strong>Stimulate every winning sensation. Clear the brain</strong> before you disappear into your screen is how you protect your entire afternoon.</p>
+      </div>
+
+      <section class="intercept-section" aria-labelledby="intercept-title">
+        <div class="intercept-copy">
+          <span class="eyebrow">proactive defense</span>
+          <h2 id="intercept-title">Set the alert<br><em>before the slump</em></h2>
+          <p>Doom-scrolling follows a predictable schedule—usually striking between 2:00 PM and 4:30 PM. Arm a circuit breaker for that exact minute so 120reset intervenes before paralysis takes over.</p>
+        </div>
+        <form class="intercept-card" id="interceptForm">
+          <span class="intercept-pill">scheduled circuit breaker</span>
+          <h3>Set Custom Intercept</h3>
+          <label>Time of day<input id="interceptTime" type="time" value="15:30" required></label>
+          <label>Identify typical freeze pattern
+            <select id="interceptPain">
+              <option>Mindless Scrolling</option>
+              <option>Task Paralysis</option>
+              <option>Brain Fog &amp; Lethargy</option>
+            </select>
+          </label>
+          <button class="button button-primary" type="submit">Save &amp; Arm Intercept <span>→</span></button>
+          <small id="interceptStatus">Zero setup. Your alert stays local on this device.</small>
+        </form>
+      </section>
+
+      <section class="final-strip">
+        <div class="final-copy">
+          <span class="eyebrow">Zero commitment</span>
+          <h2>There when you freeze<br><em>Quiet when you don't</em></h2>
+          <div class="hero-actions">
+            <a class="button button-primary app-cta-link" href="app.html">Get free instant access <span>→</span></a>
+          </div>
+          <p class="micro-proof">No account · no setup · works directly in your browser</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="custom-global-footer w-full py-10 bg-black border-t border-zinc-900 text-center">
+      <div class="footer-container max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+        <p class="text-xs text-zinc-600 font-normal">&copy; 2026 120Reset. All&nbsp;rights&nbsp;reserved.</p>
+        <div class="footer-links flex gap-8 text-xs text-zinc-600 font-normal">
+          <a href="#" class="hover:text-zinc-400 transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-zinc-400 transition-colors">Terms of Service</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+`;
+
+const stepStart = document.querySelector('#stepStart');
+const stepChoose = document.querySelector('#stepChoose');
+const stepTask = document.querySelector('#stepTask');
+const activeTaskIndex = document.querySelector('#activeTaskIndex');
+const activeTaskTitle = document.querySelector('#activeTaskTitle');
+const activeTaskCue = document.querySelector('#activeTaskCue');
+const activeTaskAction = document.querySelector('#activeTaskAction');
+const activeTaskTimer = document.querySelector('#activeTaskTimer');
+let countdownInterval = null;
+
+function startTestFlow() {
+  stepStart.hidden = true;
+  stepChoose.hidden = false;
+  stepTask.hidden = true;
+}
+
+function connectAppCtas(appKey) {
+  const targetUrl = `app.html?friction=${encodeURIComponent(appKey)}`;
+  document.querySelectorAll('.app-cta-link').forEach(btn => {
+    btn.href = targetUrl;
+  });
+  try {
+    localStorage.setItem('nudge_selected_frictions', JSON.stringify([appKey]));
+    localStorage.setItem('nudge_brain_constriction', '0.33');
+  } catch(e) {}
+}
+
+function runChosenTask(frictionKey) {
+  const data = tasksData[frictionKey];
+  if (!data) return;
+
+  currentTestedFriction = frictionKey;
+  stepChoose.hidden = true;
+  stepTask.hidden = false;
+
+  if (activeTaskIndex) activeTaskIndex.textContent = data.index;
+  if (activeTaskTitle) activeTaskTitle.textContent = data.title;
+  if (activeTaskCue) activeTaskCue.textContent = data.cue;
+  if (activeTaskAction) activeTaskAction.innerHTML = data.actionHtml;
+
+  connectAppCtas(data.appKey);
+
+  let remaining = 10;
+  if (activeTaskTimer) activeTaskTimer.textContent = '00:10';
+
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  countdownInterval = setInterval(() => {
+    remaining -= 1;
+    const formatted = `00:${String(Math.max(remaining, 0)).padStart(2, '0')}`;
+    if (activeTaskTimer) activeTaskTimer.textContent = formatted;
+
+    if (remaining <= 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      if (activeTaskTimer) activeTaskTimer.textContent = '00:00';
+      connectAppCtas(data.appKey);
+    }
+  }, 1000);
+}
+
+document.querySelectorAll('[data-friction]').forEach(btn => {
+  btn.addEventListener('click', () => runChosenTask(btn.dataset.friction));
+});
+
+const interceptForm = document.querySelector('#interceptForm');
+interceptForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const time = document.querySelector('#interceptTime').value;
+  const pain = document.querySelector('#interceptPain').value;
+  
+  localStorage.setItem('120reset_intercept', JSON.stringify({ time, pain, armedAt: Date.now() }));
+  
+  try {
+    let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
+    customs.push({
+      id: `anc_${Date.now()}`,
+      time: time,
+      friction: pain,
+      deck: 'The Anti-Overwhelm Deck',
+      enabled: true
+    });
+    localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
+  } catch(e){}
+
+  interceptForm.classList.add('is-armed');
+  document.querySelector('#interceptStatus').textContent = `Armed for ${time} · ${pain}`;
+  interceptForm.querySelector('button').innerHTML = 'Intercept armed <span>✓</span>';
+});
+
+// Interactive Brain Demo (Sends clear signal to the iframe)
+function triggerBrainUnclog() {
+  const frame = document.getElementById('interactive-brain-frame');
+  const overlay = document.getElementById('unclog-overlay-text');
+  const status = document.getElementById('unclog-status-indicator');
+  
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage('clear', '*');
+  }
+  if (overlay) {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.style.display = 'none', 400);
+  }
+  if (status) {
+    status.innerHTML = 'CLEAR SIGNAL';
+    status.style.background = 'rgba(8, 17, 31, 0.92)';
+    status.style.borderColor = 'var(--line-strong)';
+    status.style.color = 'var(--ink)';
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?sales=1').catch(() => {}));
+}
+</script>
+</body>
+</html>
